@@ -43,29 +43,45 @@ function draw(event) {
     point.size = penSize;
     point.color = penColor;
     paths[paths.length - 1].push(point);
+
     debounceRedraw();
 }
 
 function debounceRedraw() {
     if (drawingTimeout) {
-        clearTimeout(drawingTimeout);
+        cancelAnimationFrame(drawingTimeout);
     }
-    drawingTimeout = setTimeout(redraw, 10); // Redraw every 10ms (adjust as needed)
+    drawingTimeout = requestAnimationFrame(redraw);
 }
 
 function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     paths.forEach(path => {
+        if (path.length < 3) {
+            ctx.beginPath();
+            const point = path[0];
+            ctx.moveTo(point.x, point.y);
+            ctx.lineTo(point.x + 2, point.y + 2);
+            ctx.stroke();
+            return;
+        }
+
         ctx.beginPath();
-        path.forEach((point, index) => {
-            ctx.lineWidth = point.size;
-            ctx.strokeStyle = point.color;
-            if (index === 0) {
-                ctx.moveTo(point.x, point.y);
-            } else {
-                ctx.lineTo(point.x, point.y);
-            }
-        });
+        ctx.moveTo(path[0].x, path[0].y);
+
+        for (let i = 1; i < path.length - 2; i++) {
+            const c = (path[i].x + path[i + 1].x) / 2;
+            const d = (path[i].y + path[i + 1].y) / 2;
+            ctx.quadraticCurveTo(path[i].x, path[i].y, c, d);
+        }
+
+        ctx.quadraticCurveTo(
+            path[path.length - 2].x,
+            path[path.length - 2].y,
+            path[path.length - 1].x,
+            path[path.length - 1].y
+        );
+
         ctx.stroke();
     });
 }
