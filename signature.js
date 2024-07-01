@@ -5,6 +5,7 @@ let paths = [];
 let undonePaths = [];
 let penSize = document.getElementById('pen-size').value;
 let penColor = document.getElementById('pen-color').value;
+let drawingTimeout;
 
 function resizeCanvas() {
     const containerWidth = document.querySelector('.canvas-container').offsetWidth;
@@ -27,29 +28,30 @@ function startDrawing(event) {
     drawing = true;
     paths.push([]);
     undonePaths = []; // Clear the redo history
+    draw(event); // Start drawing immediately
 }
 
 function stopDrawing() {
     drawing = false;
+    clearTimeout(drawingTimeout);
 }
 
 function draw(event) {
-    if (drawing) {
-        const point = getPointerPosition(event);
-        point.size = penSize;
-        point.color = penColor;
-        paths[paths.length - 1].push(point);
-        redraw();
-    }
+    if (!drawing) return;
+
+    const point = getPointerPosition(event);
+    point.size = penSize;
+    point.color = penColor;
+    paths[paths.length - 1].push(point);
+    debounceRedraw();
 }
 
-canvas.addEventListener('mousedown', startDrawing);
-canvas.addEventListener('mouseup', stopDrawing);
-canvas.addEventListener('mousemove', draw);
-
-canvas.addEventListener('touchstart', startDrawing);
-canvas.addEventListener('touchend', stopDrawing);
-canvas.addEventListener('touchmove', draw);
+function debounceRedraw() {
+    if (drawingTimeout) {
+        clearTimeout(drawingTimeout);
+    }
+    drawingTimeout = setTimeout(redraw, 10); // Redraw every 10ms (adjust as needed)
+}
 
 function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -67,6 +69,14 @@ function redraw() {
         ctx.stroke();
     });
 }
+
+canvas.addEventListener('mousedown', startDrawing);
+canvas.addEventListener('mouseup', stopDrawing);
+canvas.addEventListener('mousemove', draw);
+
+canvas.addEventListener('touchstart', startDrawing);
+canvas.addEventListener('touchend', stopDrawing);
+canvas.addEventListener('touchmove', draw);
 
 document.getElementById('undo').addEventListener('click', () => {
     if (paths.length > 0) {
