@@ -5,7 +5,7 @@ let paths = [];
 let undonePaths = [];
 let penSize = document.getElementById('pen-size').value;
 let penColor = document.getElementById('pen-color').value;
-let drawingTimeout;
+let lastPoint;
 
 function resizeCanvas() {
     const containerWidth = document.querySelector('.canvas-container').offsetWidth;
@@ -28,30 +28,33 @@ function startDrawing(event) {
     drawing = true;
     paths.push([]);
     undonePaths = []; // Clear the redo history
-    draw(event); // Start drawing immediately
+    const point = getPointerPosition(event);
+    point.size = penSize;
+    point.color = penColor;
+    paths[paths.length - 1].push(point);
+    lastPoint = point;
 }
 
 function stopDrawing() {
     drawing = false;
-    clearTimeout(drawingTimeout);
 }
 
 function draw(event) {
     if (!drawing) return;
 
     const point = getPointerPosition(event);
-    point.size = penSize;
-    point.color = penColor;
-    paths[paths.length - 1].push(point);
-
-    debounceRedraw();
+    const dist = Math.sqrt((point.x - lastPoint.x) ** 2 + (point.y - lastPoint.y) ** 2);
+    if (dist >= 2) { // Adjust threshold for capturing points
+        point.size = penSize;
+        point.color = penColor;
+        paths[paths.length - 1].push(point);
+        lastPoint = point;
+        debounceRedraw();
+    }
 }
 
 function debounceRedraw() {
-    if (drawingTimeout) {
-        cancelAnimationFrame(drawingTimeout);
-    }
-    drawingTimeout = requestAnimationFrame(redraw);
+    requestAnimationFrame(redraw);
 }
 
 function redraw() {
