@@ -5,7 +5,8 @@ let paths = [];
 let undonePaths = [];
 let penSize = document.getElementById('pen-size').value;
 let penColor = document.getElementById('pen-color').value;
-let lastPoint;
+let lastX = 0;
+let lastY = 0;
 
 function resizeCanvas() {
     const containerWidth = document.querySelector('.canvas-container').offsetWidth;
@@ -26,31 +27,27 @@ function getPointerPosition(event) {
 
 function startDrawing(event) {
     drawing = true;
-    paths.push([]);
-    undonePaths = []; // Clear the redo history
     const point = getPointerPosition(event);
-    point.size = penSize;
-    point.color = penColor;
-    paths[paths.length - 1].push(point);
-    lastPoint = point;
-}
-
-function stopDrawing() {
-    drawing = false;
+    paths.push({ x: point.x, y: point.y, size: penSize, color: penColor });
+    [lastX, lastY] = [point.x, point.y];
+    redraw();
 }
 
 function draw(event) {
     if (!drawing) return;
-
+    
     const point = getPointerPosition(event);
-    const dist = Math.sqrt((point.x - lastPoint.x) ** 2 + (point.y - lastPoint.y) ** 2);
+    const dist = Math.sqrt((point.x - lastX) ** 2 + (point.y - lastY) ** 2);
     if (dist >= 2) { // Adjust threshold for capturing points
-        point.size = penSize;
-        point.color = penColor;
-        paths[paths.length - 1].push(point);
-        lastPoint = point;
+        paths.push({ x: point.x, y: point.y, size: penSize, color: penColor });
+        lastX = point.x;
+        lastY = point.y;
         debounceRedraw();
     }
+}
+
+function stopDrawing() {
+    drawing = false;
 }
 
 function debounceRedraw() {
@@ -59,32 +56,16 @@ function debounceRedraw() {
 
 function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    paths.forEach(path => {
-        if (path.length < 3) {
-            ctx.beginPath();
-            const point = path[0];
-            ctx.moveTo(point.x, point.y);
-            ctx.lineTo(point.x + 2, point.y + 2);
-            ctx.stroke();
-            return;
-        }
-
+    paths.forEach((point, index) => {
         ctx.beginPath();
-        ctx.moveTo(path[0].x, path[0].y);
-
-        for (let i = 1; i < path.length - 2; i++) {
-            const c = (path[i].x + path[i + 1].x) / 2;
-            const d = (path[i].y + path[i + 1].y) / 2;
-            ctx.quadraticCurveTo(path[i].x, path[i].y, c, d);
+        if (index > 0) {
+            ctx.moveTo(paths[index - 1].x, paths[index - 1].y);
+        } else {
+            ctx.moveTo(point.x - 1, point.y - 1);
         }
-
-        ctx.quadraticCurveTo(
-            path[path.length - 2].x,
-            path[path.length - 2].y,
-            path[path.length - 1].x,
-            path[path.length - 1].y
-        );
-
+        ctx.lineTo(point.x, point.y);
+        ctx.lineWidth = point.size;
+        ctx.strokeStyle = point.color;
         ctx.stroke();
     });
 }
