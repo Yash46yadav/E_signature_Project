@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electronic Signature</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Sign Below</h2>
+        <div class="toolbar">
+            <label for="pen-size">Pen Size:</label>
+            <input type="range" id="pen-size" min="1" max="10" value="2">
+            <label for="pen-color">Pen Color:</label>
+            <input type="color" id="pen-color" value="#000000">
+            <button id="undo" class="toolbar-button">Undo</button>
+            <button id="redo" class="toolbar-button">Redo</button>
+            <button id="clear" class="toolbar-button">Clear</button>
+            <button id="save" class="toolbar-button">Save</button>
+        </div>
+        <div class="canvas-container">
+            <canvas id="signature-pad" width="600" height="400"></canvas>
+        </div>
+    </div>
+    <script src="signature.js"></script>
+</body>
+</html>
